@@ -1,5 +1,5 @@
 #!/bin/bash
-source /usr/local/bin/avi_api.sh
+source /build/avi/avi_api.sh
 #
 # Removing vCenter content library
 #

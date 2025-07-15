@@ -30,6 +30,5 @@ RUN cp /build/html/* /var/www/html \
     && cp /build/nginx/default /etc/nginx/sites-available/default
 
 EXPOSE 8080
-EXPOSE 5000
 
 ENTRYPOINT ["/bin/bash", "/build/run.sh"]

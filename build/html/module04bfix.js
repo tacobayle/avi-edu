@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListener('click', () => {
 
 
-        fetch('https://sa-avitools-01.vclass.local/api/module04bfix', {
+        fetch('http://sa-avitools-01.vclass.local:8080/api/module04bfix', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch((error) => {
             console.log('Error:', error);
-            alert('clean-up error');
+            alert('Configuration failed');
         });
     });
 });

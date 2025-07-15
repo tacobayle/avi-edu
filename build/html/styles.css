@@ -7,7 +7,6 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    background: url('diagram-demo.jpg') no-repeat center center fixed;
     background-size: 85% auto, cover;
     background-position: left 90% top 100%, center;
 }
