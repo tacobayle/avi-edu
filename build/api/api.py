@@ -8,16 +8,16 @@ from flask_cors import CORS
 app = Flask(__name__)
 cors = CORS(app)
 
-@app.route('/api/module04b', methods=['POST'])
-def module04b():
+@app.route('/api/tshootCloud', methods=['POST'])
+def tshootCloud():
     folder="/build/bash"
-    process = subprocess.Popen(['/bin/bash', 'module04b.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(['/bin/bash', 'tshootCloud.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
-@app.route('/api/module04bfix', methods=['POST'])
-def module04bfix():
+@app.route('/api/tshootCloudFix', methods=['POST'])
+def tshootCloudFix():
     folder="/build/bash"
-    process = subprocess.Popen(['/bin/bash', 'module04bfix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
 # Start the server

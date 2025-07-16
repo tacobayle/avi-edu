@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListener('click', () => {
 
 
-        fetch('http://sa-avitools-01.vclass.local:8080/api/module04bfix', {
+        fetch('http://sa-avitools-01.vclass.local:8080/api/tshootCloudFix', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
