@@ -1,0 +1,1 @@
+cd avi-edu ; version='1.0' ; docker build -t avi-edu:${version} . ; docker tag avi-edu:${version} tacobayle/avi-edu:${version} ; docker push tacobayle/avi-edu:${version}

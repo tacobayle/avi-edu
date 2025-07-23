@@ -9,6 +9,7 @@ RUN apt update \
     && apt install -y iputils-ping \
     && apt install -y nginx \
     && apt install -y unzip \
+    && apt install -y vim \
     && apt install -y iproute2 \
     && apt install -y python3 \
     && apt install -y python3-pip \

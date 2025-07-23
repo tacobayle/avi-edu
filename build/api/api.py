@@ -20,6 +20,19 @@ def tshootCloudFix():
     process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
+@app.route('/api/rollBackSegSizing', methods=['POST'])
+def rollBackSegSizing():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'rollBackSegSizing.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootScaleOut', methods=['POST'])
+def tshootScaleOut():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootScaleOut.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+
 # Start the server
 if __name__ == '__main__':
     app.run()
