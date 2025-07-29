@@ -32,6 +32,11 @@ def tshootScaleOut():
     process = subprocess.Popen(['/bin/bash', 'tshootScaleOut.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
+@app.route('/api/tshootHttpHeader', methods=['POST'])
+def tshootHttpHeader():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootHttpHeader.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
 
 # Start the server
 if __name__ == '__main__':
