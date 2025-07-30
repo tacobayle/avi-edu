@@ -146,6 +146,7 @@ do
       "default_server_port": 30001,
       "enabled": true,
       "name": "nsx-overlay-vs-pool",
+      "health_monitor_refs": [{"/api/healthmonitor?name=System-HTTP"}],
       "servers": [
         {
           "enabled": true,
@@ -185,7 +186,7 @@ do
       "name": "nsx-overlay-vs",
       "vsvip_ref": "'${vsvip_url}'",
       "pool_ref": "'${pool_url}'",
-      "services": [{"port": 80, "enable_ssl": false}]
+      "services": [{"port": 80, "enable_ssl": false}, {"port": 443, "enable_ssl": true}]
     }'
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "${json_data}" "${fqdn}" "api/virtualservice"
   fi

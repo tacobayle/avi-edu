@@ -126,7 +126,7 @@ do
       "name": "nsx-overlay-scaleout",
       "vsvip_ref": "'${vsvip_url}'",
       "pool_ref": "'${pool_url}'",
-      "services": [{"port": 80, "enable_ssl": false}]
+      "services": [{"port": 80, "enable_ssl": false}, {"port": 443, "enable_ssl": true}]
     }'
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "${json_data}" "${fqdn}" "api/virtualservice"
     vs_uuid=$(echo ${response_body} | jq -c -r '.uuid')

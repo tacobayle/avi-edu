@@ -38,6 +38,12 @@ def tshootHttpHeader():
     process = subprocess.Popen(['/bin/bash', 'tshootHttpHeader.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
+@app.route('/api/tshootPool', methods=['POST'])
+def tShootPool():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootPool.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
 # Start the server
 if __name__ == '__main__':
     app.run()
