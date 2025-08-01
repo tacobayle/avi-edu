@@ -31,6 +31,7 @@ do
   if [[ $(echo ${item} | jq -c -r '.vtype') == "CLOUD_NSXT" ]]; then
     nsx_cloud_url=$(echo ${item} | jq -c -r '.url')
     nsx_cloud_uuid=$(echo ${item} | jq -c -r '.uuid')
+    nsx_cloud_obj_name_prefix=$(echo ${item} | jq -c -r '.obj_name_prefix' | sed "s/-/_/g")
     #
     # Removing all the VS of cloud NSX-T
     #
@@ -102,6 +103,12 @@ do
         se_uuid=$(echo ${se} | jq -c -r '.config.uuid')
         avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/serviceengine/${se_uuid}"
       fi
+    done
+    other_nsx_ses=$(govc find -json vm | jq '[.[] | select( . | contains("'${nsx_cloud_obj_name_prefix}'"))]')
+    echo ${other_nsx_ses} | jq -c -r .[] | while read se
+    do
+      govc vm.power -off=true "$(basename ${se})"
+      govc vm.destroy "$(basename ${se})"
     done
     #
     # Recreating nsx-overlay-vs-vip

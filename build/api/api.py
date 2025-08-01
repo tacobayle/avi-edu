@@ -23,6 +23,7 @@ def tshootCloudFix():
 @app.route('/api/rollBackSegSizing', methods=['POST'])
 def rollBackSegSizing():
     folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     process = subprocess.Popen(['/bin/bash', 'rollBackSegSizing.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
