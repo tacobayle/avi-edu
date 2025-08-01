@@ -146,7 +146,7 @@ do
       "default_server_port": 30001,
       "enabled": true,
       "name": "nsx-overlay-vs-pool",
-      "health_monitor_refs": [{"/api/healthmonitor?name=System-HTTP"}],
+      "health_monitor_refs": ["/api/healthmonitor?name=System-HTTP"],
       "servers": [
         {
           "enabled": true,
