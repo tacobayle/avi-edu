@@ -40,7 +40,7 @@ do
     do
       if [[ $(echo ${vs} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
         vs_uuid=$(echo ${vs} | jq -c -r '.uuid')
-	avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
       fi
     done
     #
@@ -51,7 +51,7 @@ do
     do
       if [[ $(echo ${vsvip} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
         vsvip_uuid=$(echo ${vsvip} | jq -c -r '.uuid')
-	avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/vsvip/${vsvip_uuid}"
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/vsvip/${vsvip_uuid}"
       fi
     done
     #
@@ -74,10 +74,10 @@ do
       serviceneginegroup_uuid=$(echo ${seg} | jq -c -r '.uuid')
       if [[ $(echo ${seg} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${seg} | jq -c -r '.name') == "Default-Group" ]]; then
         json_data=$(echo ${seg} | jq -c -r '.+={"buffer_se": 0, "min_scaleout_per_vs": 1, "algo": "PLACEMENT_ALGO_PACKED", "ha_mode": "HA_MODE_SHARED", "vcpus_per_se": 1, "memory_per_se": 2048, "disk_per_se": 15}')
-	avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "${json_data}" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
+	      avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "${json_data}" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
       fi
       if [[ $(echo ${seg} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${seg} | jq -c -r '.name') != "Default-Group" ]]; then
-	avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
       fi
     done
     #
@@ -193,6 +193,21 @@ do
       "name": "nsx-overlay-vs",
       "vsvip_ref": "'${vsvip_url}'",
       "pool_ref": "'${pool_url}'",
+      "analytics_policy": {
+        "udf_log_throttle": 10,
+        "full_client_logs": {
+          "duration": 0,
+          "throttle": 10,
+          "enabled": true
+        },
+        "metrics_realtime_update": {
+          "duration": 0,
+          "enabled": true
+        },
+        "significant_log_throttle": 10,
+        "client_insights": "NO_INSIGHTS",
+        "all_headers": true
+      },
       "services": [{"port": 80, "enable_ssl": false}, {"port": 443, "enable_ssl": true}]
     }'
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "${username}" "${avi_version}" "${json_data}" "${fqdn}" "api/virtualservice"

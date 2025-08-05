@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListener('click', () => {
 
 
-        fetch('http://sa-avitools-01.vclass.local:8080/api/rollBackSegSizing', {
+        fetch('http://sa-avitools-01.vclass.local:8080/api/poolFailPolicy', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

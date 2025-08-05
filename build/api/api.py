@@ -20,11 +20,11 @@ def tshootCloudFix():
     process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
-@app.route('/api/rollBackSegSizing', methods=['POST'])
-def rollBackSegSizing():
+@app.route('/api/resetCloudNsxOverlay', methods=['POST'])
+def resetCloudNsxOverlay():
     folder="/build/bash"
     process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
-    process = subprocess.Popen(['/bin/bash', 'rollBackSegSizing.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(['/bin/bash', 'resetCloudNsxOverlay.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
 @app.route('/api/tshootScaleOut', methods=['POST'])
@@ -43,6 +43,12 @@ def tshootHttpHeader():
 def tShootPool():
     folder="/build/bash"
     process = subprocess.Popen(['/bin/bash', 'tshootPool.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/poolFailPolicy', methods=['POST'])
+def poolFailPolicy():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'poolFailPolicy.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
 # Start the server

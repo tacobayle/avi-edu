@@ -107,6 +107,8 @@ do
       "default_server_port": 30001,
       "enabled": true,
       "name": "webapp-server2-pool",
+      "lb_algorithm": "LB_ALGORITHM_ROUND_ROBIN",
+      "lb_algorithm_hash": "LB_ALGORITHM_CONSISTENT_HASH_SOURCE_IP_ADDRESS",
       "servers": [
         {
           "enabled": false,
