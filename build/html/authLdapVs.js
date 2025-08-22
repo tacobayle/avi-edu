@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListener('click', () => {
 
 
-        fetch('http://sa-avitools-01.vclass.local:8080/api/poolFailPolicy', {
+        fetch('http://sa-avitools-01.vclass.local:8080/api/authLdapVs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

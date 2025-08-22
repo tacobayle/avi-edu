@@ -45,10 +45,58 @@ def tShootPool():
     process = subprocess.Popen(['/bin/bash', 'tshootPool.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
-@app.route('/api/poolFailPolicy', methods=['POST'])
-def poolFailPolicy():
+@app.route('/api/initializeYourVs', methods=['POST'])
+def initializeYourVs():
     folder="/build/bash"
-    process = subprocess.Popen(['/bin/bash', 'poolFailPolicy.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(['/bin/bash', 'initializeYourVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootTlsVsPool', methods=['POST'])
+def tshootTlsVsPool():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootTlsVsPool.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootIntermittentVs01', methods=['POST'])
+def tshootIntermittentVs01():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootIntermittentVs01.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootIntermittentVs02', methods=['POST'])
+def tshootIntermittentVs02():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootIntermittentVs02.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/gslbInfrastructureSiteB', methods=['POST'])
+def gslbInfrastructureSiteB():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'gslbInfrastructureSiteB.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootGslbService', methods=['POST'])
+def tshootGslbService():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootGslbService.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/authLdapVs', methods=['POST'])
+def authLdapVs():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'authLdapVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootPoolAuth', methods=['POST'])
+def tshootPoolAuth():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootPoolAuth.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/createMultipleVs', methods=['POST'])
+def createMultipleVs():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'createMultipleVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
 # Start the server
