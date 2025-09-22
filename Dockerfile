@@ -14,8 +14,13 @@ RUN apt update \
     && apt install -y python3 \
     && apt install -y python3-pip \
     && apt install -y gnupg software-properties-common \
+    && curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+    && apt-add-repository -y "deb [arch=amd64] https://apt.releases.hashicorp.com noble main" \
+    && apt update \
+    && apt install -y terraform \
     && pip3 install ansible-core==2.18.6 --break-system-packages \
     && pip3 install ansible==11.7.0 --break-system-packages \
+    && ansible-galaxy collection install vmware.alb \
     && pip3 install avisdk --break-system-packages \
     && pip3 install gunicorn --break-system-packages \
     && apt remove -y python3-blinker \

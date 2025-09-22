@@ -99,6 +99,25 @@ def createMultipleVs():
     process = subprocess.Popen(['/bin/bash', 'createMultipleVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
+@app.route('/api/tshootVs', methods=['POST'])
+def tshootVs():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootRbac', methods=['POST'])
+def tshootRbac():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootRbac.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/upgrade', methods=['POST'])
+def upgrade():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'upgrade.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+
 # Start the server
 if __name__ == '__main__':
     app.run()

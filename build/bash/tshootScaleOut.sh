@@ -31,6 +31,73 @@ do
   if [[ $(echo ${item} | jq -c -r '.vtype') == "CLOUD_NSXT" ]]; then
     nsx_cloud_url=$(echo ${item} | jq -c -r '.url')
     nsx_cloud_uuid=$(echo ${item} | jq -c -r '.uuid')
+    #
+    # Removing all the VS of cloud NSX-T
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice"
+    echo ${response_body} | jq -c -r .results[] | while read vs
+    do
+      if [[ $(echo ${vs} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${vs} | jq -c -r '.type') == "VS_TYPE_VH_CHILD" ]]; then
+        vs_uuid=$(echo ${vs} | jq -c -r '.uuid')
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
+      fi
+    done
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice"
+    echo ${response_body} | jq -c -r .results[] | while read vs
+    do
+      if [[ $(echo ${vs} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
+        vs_uuid=$(echo ${vs} | jq -c -r '.uuid')
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
+      fi
+    done
+    #
+    # Removing all the vsvip of cloud NSX-T
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/vsvip"
+    echo ${response_body} | jq -c -r .results[] | while read vsvip
+    do
+      if [[ $(echo ${vsvip} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
+        vsvip_uuid=$(echo ${vsvip} | jq -c -r '.uuid')
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/vsvip/${vsvip_uuid}"
+      fi
+    done
+    #
+    # Removing all the pool of cloud NSX-T
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/pool"
+    echo ${response_body} | jq -c -r .results[] | while read pool
+    do
+      if [[ $(echo ${pool} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
+        pool_uuid=$(echo ${pool} | jq -c -r '.uuid')
+        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/pool/${pool_uuid}"
+      fi
+    done
+    #
+    # seg initialization
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceenginegroup"
+    echo ${response_body} | jq -c -r .results[] | while read seg
+    do
+      serviceneginegroup_uuid=$(echo ${seg} | jq -c -r '.uuid')
+      if [[ $(echo ${seg} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${seg} | jq -c -r '.name') == "Default-Group" ]]; then
+        json_data=$(echo ${seg} | jq -c -r '.+={"buffer_se": 0, "min_scaleout_per_vs": 1, "algo": "PLACEMENT_ALGO_PACKED", "ha_mode": "HA_MODE_SHARED", "vcpus_per_se": 1, "memory_per_se": 2048, "disk_per_se": 15}')
+	      avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
+      fi
+    done
+    #
+    # Keeping a single service engine with IP 21.0.0.100 and removing the others
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine-inventory/?cloud_ref.uuid=${nsx_cloud_uuid}"
+    echo ${response_body} | jq -c -r .results[] | while read se
+    do
+      if [[ $(echo ${se} | jq -c -r '.config.mgmt_ip_address.addr') != "21.0.0.100" ]]; then
+        se_uuid=$(echo ${se} | jq -c -r '.config.uuid')
+        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine/${se_uuid}"
+      fi
+    done
+    #
+    # Update the network with a single IP for the management - 21.0.0.100
+    #
     avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/network"
     echo ${response_body} | jq -c -r .results[] | while read network
     do
@@ -42,10 +109,7 @@ do
       fi
     done
     #
-    # Created a new VS to scale-out
-    #
-    #
-    # Recreating nsx-overlay-vs-vip
+    # Created a new VS to scale-out - vsvip
     #
     json_data='
     {
@@ -79,7 +143,7 @@ do
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/vsvip"
     vsvip_url=$(echo ${response_body} | jq -c -r '.url')
     #
-    # Recreating pool for nsx-overlay-scaleout
+    # Created a new VS to scale-out - pool
     #
     json_data='
     {
@@ -118,7 +182,7 @@ do
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/pool"
     pool_url=$(echo ${response_body} | jq -c -r '.url')
     #
-    # Recreating the VS
+    # Created a new VS to scale-out - vs
     #
     json_data='
     {
@@ -130,7 +194,7 @@ do
     }'
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/virtualservice"
     vs_uuid=$(echo ${response_body} | jq -c -r '.uuid')
-    sleep 2
+    sleep 8
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" '{"to_new_se": true, "vip_id": 0}' "${fqdn}" "api/virtualservice/${vs_uuid}/scaleout"
   fi
 done

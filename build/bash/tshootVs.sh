@@ -22,7 +22,7 @@ curl_login=$(curl -s -k -X POST -H "Content-Type: application/json" \
                                 -c ${avi_cookie_file} https://${fqdn}/login)
 csrftoken=$(cat ${avi_cookie_file} | grep csrftoken | awk '{print $7}')
 #
-# update nsx cloud with state_based_dns_registration = false
+# u
 #
 avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/cloud"
 echo ${response_body} | jq -c -r .results[] | while read item
@@ -30,10 +30,6 @@ do
   if [[ $(echo ${item} | jq -c -r '.vtype') == "CLOUD_NSXT" ]]; then
     nsx_cloud_uuid=$(echo ${item} | jq -c -r '.uuid')
     nsx_cloud_url=$(echo ${item} | jq -c -r '.url')
-    if [[ $(echo ${item} | jq -c -r '.state_based_dns_registration') == "true" ]]; then
-      json_data=$(echo ${item} | jq -c -r '. += {"state_based_dns_registration": false}')
-      avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/cloud/${nsx_cloud_uuid}"
-    fi
     #
     # Removing all the VS of cloud NSX-T
     #
@@ -76,42 +72,14 @@ do
       fi
     done
     #
-    # Rollback to default SEG config (sizing and HA_MODE)
+    # Remove App profile called "Web-App-HTTP-custom"
     #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceenginegroup"
-    echo ${response_body} | jq -c -r .results[] | while read seg
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/applicationprofile"
+    echo ${response_body} | jq -c -r .results[] | while read applicationprofile
     do
-      serviceneginegroup_uuid=$(echo ${seg} | jq -c -r '.uuid')
-      if [[ $(echo ${seg} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${seg} | jq -c -r '.name') == "Default-Group" ]]; then
-        json_data=$(echo ${seg} | jq -c -r '.+={"buffer_se": 0, "min_scaleout_per_vs": 1, "algo": "PLACEMENT_ALGO_PACKED", "ha_mode": "HA_MODE_SHARED", "vcpus_per_se": 1, "memory_per_se": 2048, "disk_per_se": 15}')
-	      avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
-      fi
-      if [[ $(echo ${seg} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${seg} | jq -c -r '.name') != "Default-Group" ]]; then
-	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
-      fi
-    done
-    #
-    # Keeping a single service engine with IP 21.0.0.100 and removing the others
-    #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine-inventory/?cloud_ref.uuid=${nsx_cloud_uuid}"
-    echo ${response_body} | jq -c -r .results[] | while read se
-    do
-      if [[ $(echo ${se} | jq -c -r '.config.mgmt_ip_address.addr') != "21.0.0.100" || $(echo ${se} | jq -c -r '.config.mgmt_ip_address.addr') == "null" ]]; then
-        se_uuid=$(echo ${se} | jq -c -r '.config.uuid')
-        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine/${se_uuid}"
-      fi
-    done
-    #
-    # Rollback to default network Mgmt pool
-    #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/network"
-    echo ${response_body} | jq -c -r .results[] | while read network
-    do
-      if [[ $(echo ${network} | jq -c -r '.name') == "SA-Overlay-Mgmt" && $(echo ${network} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
-        network_uuid=$(echo ${network} | jq -c -r '.uuid')
-        json_data=$(echo ${network} | jq -c -r '.')
-        json_data=$(echo ${json_data} | jq -c -r '.configured_subnets[0].static_ip_ranges[0].range.end = {"addr": "21.0.0.120", "type": "V4"}')
-        avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/network/${network_uuid}"
+      if [[ $(echo ${applicationprofile} | jq -c -r '.name') == "Web-App-HTTP-custom" ]]; then
+        applicationprofile_uuid=$(echo ${applicationprofile} | jq -c -r '.uuid')
+        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/applicationprofile/${applicationprofile_uuid}"
       fi
     done
     #
@@ -142,7 +110,7 @@ do
               "mask": 24
             }
           }
-	      }
+	}
       ],
       "vrf_context_ref": "/api/vrfcontext/?name=SA-T1"
     }'
@@ -157,11 +125,11 @@ do
       "default_server_port": 30001,
       "enabled": true,
       "name": "nsx-overlay-vs-pool",
-      "health_monitor_refs": ["/api/healthmonitor?name=System-HTTP"],
       "servers": [
         {
           "enabled": true,
           "hostname": "sa-server-01",
+          "ratio": 1,
           "ip": {
             "addr": "192.168.130.10",
             "type": "V4"
@@ -170,6 +138,7 @@ do
         {
           "enabled": true,
           "hostname": "sa-server-02",
+          "ratio": 1,
           "ip": {
             "addr": "192.168.130.11",
             "type": "V4"
@@ -178,6 +147,7 @@ do
         {
           "enabled": true,
           "hostname": "sa-server-03",
+          "ratio": 1,
           "ip": {
             "addr": "192.168.130.12",
             "type": "V4"
@@ -188,6 +158,79 @@ do
     }'
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/pool"
     pool_url=$(echo ${response_body} | jq -c -r '.url')
+
+    json_data='
+    {
+      "http_profile": {
+        "allow_dots_in_header_name": false,
+        "client_body_timeout": 30000,
+        "client_header_timeout": 10000,
+        "client_max_body_size": 0,
+        "client_max_header_size": 12,
+        "client_max_request_size": 48,
+        "close_server_side_connection_on_error": false,
+        "collect_client_tls_fingerprint": false,
+        "connection_multiplexing_enabled": true,
+        "detect_ntlm_app": true,
+        "disable_keepalive_posts_msie6": true,
+        "disable_sni_hostname_check": false,
+        "enable_chunk_merge": true,
+        "enable_fire_and_forget": false,
+        "enable_request_body_buffering": false,
+        "enable_request_body_metrics": false,
+        "fwd_close_hdr_for_bound_connections": true,
+        "hsts_enabled": false,
+        "hsts_max_age": 365,
+        "hsts_subdomains_enabled": true,
+        "http2_profile": {
+          "enable_http2_server_push": false,
+          "http2_initial_window_size": 64,
+          "max_http2_concurrent_pushes_per_connection": 10,
+          "max_http2_concurrent_streams_per_connection": 128,
+          "max_http2_control_frames_per_connection": 1000,
+          "max_http2_empty_data_frames_per_connection": 1000,
+          "max_http2_header_field_size": 4096,
+          "max_http2_queued_frames_to_client_per_connection": 1000,
+          "max_http2_requests_per_connection": 1000
+        },
+        "http_to_https": false,
+        "http_upstream_buffer_size": 0,
+        "httponly_enabled": false,
+        "keepalive_header": false,
+        "keepalive_timeout": 30000,
+        "max_bad_rps_cip": 0,
+        "max_bad_rps_cip_uri": 0,
+        "max_bad_rps_uri": 0,
+        "max_header_count": 2,
+        "max_keepalive_requests": 100,
+        "max_response_headers_size": 48,
+        "max_rps_cip": 0,
+        "max_rps_cip_uri": 0,
+        "max_rps_unknown_cip": 0,
+        "max_rps_unknown_uri": 0,
+        "max_rps_uri": 0,
+        "pass_through_x_accel_headers": false,
+        "post_accept_timeout": 30000,
+        "reset_conn_http_on_ssl_port": false,
+        "respond_with_100_continue": true,
+        "secure_cookie_enabled": false,
+        "server_side_redirect_to_https": false,
+        "ssl_client_certificate_mode": "SSL_CLIENT_CERTIFICATE_NONE",
+        "use_app_keepalive_timeout": false,
+        "use_true_client_ip": false,
+        "websockets_enabled": true,
+        "x_forwarded_proto_enabled": false,
+        "xff_alternate_name": "X-Forwarded-For",
+        "xff_enabled": true,
+        "xff_update": "REPLACE_XFF_HEADERS"
+      },
+      "name": "Web-App-HTTP-custom",
+      "preserve_client_ip": false,
+      "preserve_dest_ip_port": false,
+      "type": "APPLICATION_PROFILE_TYPE_HTTP"
+    }'
+    avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/applicationprofile"
+    applicationprofile_url=$(echo ${response_body} | jq -c -r '.url')
     #
     # Recreating the VS
     #
@@ -197,6 +240,7 @@ do
       "name": "nsx-overlay-vs",
       "vsvip_ref": "'${vsvip_url}'",
       "pool_ref": "'${pool_url}'",
+      "application_profile_ref": "'${applicationprofile_url}'",
       "analytics_policy": {
         "udf_log_throttle": 10,
         "full_client_logs": {

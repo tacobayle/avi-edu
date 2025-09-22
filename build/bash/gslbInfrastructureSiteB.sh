@@ -78,7 +78,7 @@ do
     }'
     avi_api 2 2 "POST" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/serviceenginegroup"
     #
-    # Recreating nsx-overlay-vs-vip
+    #
     #
     json_data='
     {
