@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 05 - Avi Controller - What to know - What to consider</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<br>
+<br>
+<h1>Lab 05 - Avi Controller - What to know - What to consider</h1>
+<h2>Prerequisites</h2>
+<table>
+    <tr>
+        <th class="centered-header">Lab Number</th>
+        <th class="centered-header">Lab Title</th>
+    </tr>
+</table>
+<br>
+<br>
+<h2>Links</h2>
+<table>
+    <tr>
+        <th class="centered-header">Task Number</th>
+        <th class="centered-header">Step Number</th>
+        <th class="centered-header">links</th>
+    </tr>
+    <tr>
+        <td>5.1</td>
+        <td>2</td>
+        <td><a href="https://sa-avicon-01.vclass.local/api/cpuusage/controller" target="_blank">https://sa-avicon-01.vclass.local/api/cpuusage/controller</a></td>
+    </tr>
+    <tr>
+        <td>5.2</td>
+        <td>2</td>
+        <td><a href="https://sa-avicon-01.vclass.local/api/memoryusage/controller" target="_blank">https://sa-avicon-01.vclass.local/api/memoryusage/controller</a></td>
+    </tr>
+    <tr>
+        <td>5.3</td>
+        <td>2</td>
+        <td><a href="https://sa-avicon-01.vclass.local/api/diskusage/controller" target="_blank">https://sa-avicon-01.vclass.local/api/diskusage/controller</a></td>
+    </tr>
+</table>
+<br>
+<br>
+<h2>Commands</h2>
+<table>
+    <tr>
+        <th class="centered-header">Task Number</th>
+        <th class="centered-header">Step Number</th>
+        <th class="centered-header">command</th>
+        <th class="centered-header">Copy</th>
+    </tr>
+    <tr>
+        <td>5.4</td>
+        <td>3</td>
+        <td><code><div id="contentToCopy0">curl -k -X POST \<br>
+         -H "Content-Type: application/json" \<br>
+         -c avi_cookie_file \<br>
+         -d '{"username": "admin", "password": "VMware1!"}' \<br>
+         https://sa-avicon-01.vclass.local/login</div></code></td>
+        <td><button id="copyButton0">Copy</button></td>
+    </tr>
+    <tr>
+        <td>5.4</td>
+        <td>4</td>
+        <td><code><div id="contentToCopy1">more avi_cookie_file</div></code></td>
+        <td><button id="copyButton1">Copy</button></td>
+    </tr>
+    <tr>
+        <td>5.4</td>
+        <td>5</td>
+        <td><code><div id="contentToCopy2">curl -k -X GET -H "Content-Type: application/json" -b avi_cookie_file \<br>
+            https://sa-avicon-01.vclass.local/api/cpuusage/controller</div></code></td>
+        <td><button id="copyButton2">Copy</button></td>
+    </tr>
+    <tr>
+        <td>5.4</td>
+        <td>6</td>
+        <td><code><div id="contentToCopy3">curl -k -X GET -H "Content-Type: application/json" -b avi_cookie_file \<br>
+            https://sa-avicon-01.vclass.local/api/memoryusage/controller</div></code></td>
+        <td><button id="copyButton3">Copy</button></td>
+    </tr>
+    <tr>
+        <td>5.4</td>
+        <td>7</td>
+        <td><code><div id="contentToCopy4">curl -k -X GET -H "Content-Type: application/json" -b avi_cookie_file \<br>
+            https://sa-avicon-01.vclass.local/api/diskusage/controller</div></code></td>
+        <td><button id="copyButton4">Copy</button></td>
+    </tr>
+</table>
+<script src="lab05.js"></script>
+</body>
+</html>

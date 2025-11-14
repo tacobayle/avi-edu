@@ -22,7 +22,12 @@ curl_login=$(curl -s -k -X POST -H "Content-Type: application/json" \
                                 -c ${avi_cookie_file} https://${fqdn}/login)
 csrftoken=$(cat ${avi_cookie_file} | grep csrftoken | awk '{print $7}')
 #
-# retrieve nsx cloud url and cloud uuid
+# get tenants
+#
+avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/tenant?page_size=-1"
+tenant_results=$(echo $response_body | jq -c -r '.results')
+#
+# update nsx cloud with state_based_dns_registration = false
 #
 avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/cloud"
 echo ${response_body} | jq -c -r .results[] | while read item
@@ -32,45 +37,71 @@ do
     nsx_cloud_url=$(echo ${item} | jq -c -r '.url')
     nsx_cloud_uuid=$(echo ${item} | jq -c -r '.uuid')
     nsx_cloud_obj_name_prefix=$(echo ${item} | jq -c -r '.obj_name_prefix' | sed "s/-/_/g")
+    if [[ $(echo ${item} | jq -c -r '.state_based_dns_registration') == "true" ]]; then
+      json_data=$(echo ${item} | jq -c -r '. += {"state_based_dns_registration": false}')
+      avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "${json_data}" "${fqdn}" "api/cloud/${nsx_cloud_uuid}"
+    fi
+    #
+    # updating service engine group for NSX Overlay cloud with se_deprovision_delay: 3 to get rid quickly of unused SEs
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "*" "${avi_version}" "" "${fqdn}" "api/serviceenginegroup"
+    echo ${response_body} | jq -c -r .results[] | while read seg
+    do
+      serviceneginegroup_uuid=$(echo ${seg} | jq -c -r '.uuid')
+      if [[ $(echo ${seg} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
+        json_data=$(echo ${seg} | jq -c -r '.+={"se_deprovision_delay": 3}')
+        item_tenant_uuid=$(echo ${seg} | jq -c -r '.tenant_ref' | grep / | cut -d/ -f6-)
+        item_tenant_name=$(echo ${tenant_results} | jq -c -r --arg arg "${item_tenant_uuid}" '.[] | select( .uuid == $arg ) | .name')
+	      avi_api 2 2 "PUT" "${avi_cookie_file}" "${csrftoken}" "${item_tenant_name}" "${avi_version}" "${json_data}" "${fqdn}" "api/serviceenginegroup/${serviceneginegroup_uuid}"
+      fi
+    done
     #
     # Removing all the VS of cloud NSX-T
     #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice"
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "*" "${avi_version}" "" "${fqdn}" "api/virtualservice"
     echo ${response_body} | jq -c -r .results[] | while read vs
     do
       if [[ $(echo ${vs} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} && $(echo ${vs} | jq -c -r '.type') == "VS_TYPE_VH_CHILD" ]]; then
         vs_uuid=$(echo ${vs} | jq -c -r '.uuid')
-	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
+        item_tenant_uuid=$(echo ${vs} | jq -c -r '.tenant_ref' | grep / | cut -d/ -f6-)
+        item_tenant_name=$(echo ${tenant_results} | jq -c -r --arg arg "${item_tenant_uuid}" '.[] | select( .uuid == $arg ) | .name')
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${item_tenant_name}" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
       fi
     done
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice"
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "*" "${avi_version}" "" "${fqdn}" "api/virtualservice"
     echo ${response_body} | jq -c -r .results[] | while read vs
     do
       if [[ $(echo ${vs} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
         vs_uuid=$(echo ${vs} | jq -c -r '.uuid')
-	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
+        item_tenant_uuid=$(echo ${vs} | jq -c -r '.tenant_ref' | grep / | cut -d/ -f6-)
+        item_tenant_name=$(echo ${tenant_results} | jq -c -r --arg arg "${item_tenant_uuid}" '.[] | select( .uuid == $arg ) | .name')
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${item_tenant_name}" "${avi_version}" "" "${fqdn}" "api/virtualservice/${vs_uuid}"
       fi
     done
     #
     # Removing all the vsvip of cloud NSX-T
     #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/vsvip"
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "*" "${avi_version}" "" "${fqdn}" "api/vsvip"
     echo ${response_body} | jq -c -r .results[] | while read vsvip
     do
       if [[ $(echo ${vsvip} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
         vsvip_uuid=$(echo ${vsvip} | jq -c -r '.uuid')
-	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/vsvip/${vsvip_uuid}"
+        item_tenant_uuid=$(echo ${vsvip} | jq -c -r '.tenant_ref' | grep / | cut -d/ -f6-)
+        item_tenant_name=$(echo ${tenant_results} | jq -c -r --arg arg "${item_tenant_uuid}" '.[] | select( .uuid == $arg ) | .name')
+	      avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${item_tenant_name}" "${avi_version}" "" "${fqdn}" "api/vsvip/${vsvip_uuid}"
       fi
     done
     #
     # Removing all the pool of cloud NSX-T
     #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/pool"
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "*" "${avi_version}" "" "${fqdn}" "api/pool"
     echo ${response_body} | jq -c -r .results[] | while read pool
     do
       if [[ $(echo ${pool} | jq -c -r '.cloud_ref') == ${nsx_cloud_url} ]]; then
         pool_uuid=$(echo ${pool} | jq -c -r '.uuid')
-        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/pool/${pool_uuid}"
+        item_tenant_uuid=$(echo ${pool} | jq -c -r '.tenant_ref' | grep / | cut -d/ -f6-)
+        item_tenant_name=$(echo ${tenant_results} | jq -c -r --arg arg "${item_tenant_uuid}" '.[] | select( .uuid == $arg ) | .name')
+        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "${item_tenant_name}" "${avi_version}" "" "${fqdn}" "api/pool/${pool_uuid}"
       fi
     done
     #
@@ -89,6 +120,17 @@ do
       fi
     done
     #
+    # Keeping a single service engine with IP 21.0.0.100 and removing the others
+    #
+    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine-inventory/?cloud_ref.uuid=${nsx_cloud_uuid}"
+    echo ${response_body} | jq -c -r .results[] | while read se
+    do
+      if [[ $(echo ${se} | jq -c -r '.config.mgmt_ip_address.addr') != "21.0.0.100" || $(echo ${se} | jq -c -r '.config.mgmt_ip_address.addr') == "null" ]]; then
+        se_uuid=$(echo ${se} | jq -c -r '.config.uuid')
+        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine/${se_uuid}"
+      fi
+    done
+    #
     # Rollback to default network Mgmt pool
     #
     avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/network"
@@ -104,20 +146,20 @@ do
     #
     # Removing unused SE
     #
-    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine-inventory/?cloud_ref.uuid=${nsx_cloud_uuid}"
-    echo ${response_body} | jq -c -r .results[] | while read se
-    do
-      if [[ $(echo ${se} | jq -c -r '.config.virtualservice_refs | length') ==  0 ]]; then
-        se_uuid=$(echo ${se} | jq -c -r '.config.uuid')
-        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine/${se_uuid}"
-      fi
-    done
-    other_nsx_ses=$(govc find -json vm | jq '[.[] | select( . | contains("'${nsx_cloud_obj_name_prefix}'"))]')
-    echo ${other_nsx_ses} | jq -c -r .[] | while read se
-    do
-      govc vm.power -off=true "$(basename ${se})"
-      govc vm.destroy "$(basename ${se})"
-    done
+#    avi_api 2 2 "GET" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine-inventory/?cloud_ref.uuid=${nsx_cloud_uuid}"
+#    echo ${response_body} | jq -c -r .results[] | while read se
+#    do
+#      if [[ $(echo ${se} | jq -c -r '.config.virtualservice_refs | length') ==  0 ]]; then
+#        se_uuid=$(echo ${se} | jq -c -r '.config.uuid')
+#        avi_api 2 2 "DELETE" "${avi_cookie_file}" "${csrftoken}" "admin" "${avi_version}" "" "${fqdn}" "api/serviceengine/${se_uuid}"
+#      fi
+#    done
+#    other_nsx_ses=$(govc find -json vm | jq '[.[] | select( . | contains("'${nsx_cloud_obj_name_prefix}'"))]')
+#    echo ${other_nsx_ses} | jq -c -r .[] | while read se
+#    do
+#      govc vm.power -off=true "$(basename ${se})"
+#      govc vm.destroy "$(basename ${se})"
+#    done
     #
     # Recreating nsx-overlay-vs-vip
     #

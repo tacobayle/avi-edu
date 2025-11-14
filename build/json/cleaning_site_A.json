@@ -1,0 +1,14 @@
+{
+  "resources": [
+    {
+      "object": "virtualservice",
+      "action": "delete",
+      "exception": ["SA-DNS-01"]
+    },
+    {
+      "object": "cloud",
+      "action": "delete",
+      "exception": ["SA-vCenter-Cloud", "Default-Cloud"]
+    }
+  ]
+}

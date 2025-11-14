@@ -24,7 +24,7 @@ def tshootCloudFix():
 def resetCloudNsxOverlay():
     folder="/build/bash"
     process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
-    process = subprocess.Popen(['/bin/bash', 'resetCloudNsxOverlay.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(['/bin/bash', 'initializeYourVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
 @app.route('/api/tshootScaleOut', methods=['POST'])
@@ -48,6 +48,14 @@ def tShootPool():
 @app.route('/api/initializeYourVs', methods=['POST'])
 def initializeYourVs():
     folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(['/bin/bash', 'initializeYourVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/resetYourEnvironment', methods=['POST'])
+def resetYourEnvironment():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootCloudFix.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     process = subprocess.Popen(['/bin/bash', 'initializeYourVs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
@@ -117,6 +125,23 @@ def upgrade():
     process = subprocess.Popen(['/bin/bash', 'upgrade.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
     return "Config. applied", 201
 
+@app.route('/api/multiTenants', methods=['POST'])
+def mutiTenants():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'multiTenants.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/tshootTenantsSegs', methods=['POST'])
+def tshootTenantsSegs():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'tshootTenantsSegs.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
+
+@app.route('/api/granularRbac', methods=['POST'])
+def granularRbac():
+    folder="/build/bash"
+    process = subprocess.Popen(['/bin/bash', 'granularRbac.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder)
+    return "Config. applied", 201
 
 # Start the server
 if __name__ == '__main__':
